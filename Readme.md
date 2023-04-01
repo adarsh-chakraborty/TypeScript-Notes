@@ -317,3 +317,132 @@ function printResult(value: number): undefined{
     return; // return statement is necessary
 }
 ```
+---
+### Function as return Type
+
+Function Types is a type that describe a function.
+
+1. Function type
+With `Function` type, It is can store any kind of function in the variable but it's not useful for most cases.
+
+```javascript
+// This is allow any function to be stored
+let calculateAge: Function;
+```
+
+2. Function with arguements and return type.
+
+Syntax: `() => returnType`
+
+```javascript
+let greetAll: () => string;
+let greetWithName: (name: string) => string;
+```
+
+Here, without using curly braces `{}` we simply **declare an arrow function pointing to the return type** of the function.
+
+We can also specify what kind of arguements the function will will accept by the following syntax.
+
+Syntax: `(a: number, b: number ) => returnType`
+
+The parameter names doesn't have to be the same as the function that it will evantually be stored in the variable. Only the type of the arguements matter.
+
+3. Callback Function Type 
+
+We can declare a parameter of the function to be a function that will be a evantually called with arguements.
+
+```javascript
+function addAndHandle(n1: number, n2: number, cb: (num: number) => void) {
+    const result = n1+n2;
+    cb(result);
+}
+
+// cb will accept 1 arguement which should be a number and does not return anything so void.
+
+// Let's call the function and pass a function
+
+addAndHandle(2,4,(result) => {
+    console.log(result)
+});
+```
+Name of function arguements type doesn't have to be same. `num` is declared in the callback type but `result` variable is used.
+
+--- 
+
+### unknown Type 
+
+unknown type is different from `any` type in TypeScript. It sure does allow us to store any kind of in the variable of type unknown.
+
+```javascript
+let userInput: unknown;
+
+userInput = 5; // allowed
+userInput = 'Max'; // allowed
+
+let userName = 'Admin';
+
+userName = userInput; // ERROR
+// ERROR: Unknown is not assignable to string userName. (Any type would still work)
+```
+
+It allowed to store string and number just like the `any` type but is not assignable to variable of other core types. 
+
+To assign unknown type variables to other variables of core type we will have to do a if check.
+
+```javascript
+let userInput: unknown;
+
+userInput = 5; // allowed
+userInput = 'Max'; // allowed
+
+let userName = 'Admin';
+
+if(typeof userInput ==='string'){
+    userName = userInput; // Allowed after if check
+}
+
+```
+
+TypeScript will detect the if statement before assignment of the unknown variable to a core variable and the error will be gone.
+
+
+---
+
+### never type 
+
+never is another type functions can return just like a void but for some specific function which never yields to a return value.
+
+Example:
+```javascript
+function AppError(message: string, code: number){
+    throw {
+        message: message,
+        errorCode: code
+    }
+}
+
+// Invoking the above function
+generateError("An Error occured", 500);
+```
+
+Here, after the throw statement the further execution of the function is stopped so it `never` yields to a return statement even if we try to put it in a variable.
+
+It will not even log `undefined` because after the throw statement, the further code is unreachable.
+
+Such kind of function can be said to have a return type of `never`.
+
+```javascript
+function AppError(message: string, code: number): never {
+    throw {
+        message: message,
+        errorCode: code
+    }
+}
+
+// Invoking the above function
+generateError("An Error occured", 500);
+```
+
+It is actually similar to void and void was used before the `never` type as it's fairly new compared to other core types. But it's always better to be more specific.
+
+Another kind of function type never will be a function containing a infinite loop.
