@@ -490,3 +490,41 @@ tsc --watch
 
 ## Including and Excluding Files
 
+**Exclude**
+To exclude any file we add `exclude` option in the `tsconfig.json` file which holds an array of filenames, paths, wildcards of the files to exclude from TypeScript compilation.
+
+```
+"exclude" : [
+    "analytics.js", // Ignore file named analytics.js
+    "*.dev.ts", // Ignore any file with .dev.ts extension
+    "**/*.dev.ts", // In any Folder having a dev.ts file should be ignored
+    "node_modules", // Ignore the node_modules folder (Default)
+]
+```
+
+**Note: If exclude option is not set, node_modules is automatically excluded as default setting.**
+
+**Include**
+
+When include option is set, we will have to mention all the files that has to be compiled, it will not watch for all ts files in the project anymore.
+
+```
+"include" : [
+    "analytics.js", // Include file named analytics.js
+    "app.ts", // Include file app.ts
+    "src", // folder containing the ts file
+]
+```
+
+If any anything that is part of include and also mentioned in exclude then it will be filtered and whatever mentioned in exclude will do get excluded in the compilation process.
+
+So we can say, compilation = Include - Exclude
+
+**Files option**
+Files option is similar to includes option but here we can't specify whole folder but instead only the files. Good for small projects
+```
+"files" : [
+    "analytics.js", // Include file named analytics.js
+    "app.ts", // Include file app.ts
+]
+```
