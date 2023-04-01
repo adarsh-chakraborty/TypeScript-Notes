@@ -446,3 +446,47 @@ generateError("An Error occured", 500);
 It is actually similar to void and void was used before the `never` type as it's fairly new compared to other core types. But it's always better to be more specific.
 
 Another kind of function type never will be a function containing a infinite loop.
+
+
+---
+
+## TypeScript Configuration
+
+### Compile a TS file
+
+```shell
+tsc file_name.js
+```
+
+### Enable Watch Mode for a single file
+
+```shell
+tsc file_name.js --watch
+tsc file_name.js -w
+```
+
+### Enable Watch Mode for the entire project
+
+In the root project folder:
+```shell
+tsc --init
+```
+
+The above command will initialize the project as a typescript project and creates a `tsconfig.json` file.
+
+Now we can use tsc command without pointing to any file to compile all typescript files.
+```shell
+tsc
+```
+
+#### Compile with Watch Mode
+To compile and watch for typescript file changes in our entire project, we can simply
+
+```shell
+tsc -w
+// OR
+tsc --watch
+```
+
+## Including and Excluding Files
+
