@@ -528,3 +528,349 @@ Files option is similar to includes option but here we can't specify whole folde
     "app.ts", // Include file app.ts
 ]
 ```
+
+---
+
+## TypeScript and Modern JavaScript
+
+#### Classes
+
+```javascript
+// Class in javascript
+class Department {
+ name: string = 'Department Default Name';
+ id: number;
+
+ constructor(n: string){
+     this.name = n;
+ }
+
+ describe(){
+     console.log("Department: ", this.name);
+ }
+}
+
+
+const accounting = new Department('Accounting');
+accounting.describe() // Accounting
+
+const accCopy = {describe: accounting.describe}; // pointer to the function
+
+accCopy.describe(); // undefined
+```
+
+accCopy gives undefined because the **this** now refers to accCopy instead of the accounting Object. 
+
+Because, this always refers to the object it's called upon, so in this case it's accCopy it is called on.
+
+To prevent this in typescript, we can write the same function...
+
+
+```javascript
+// Class in javascript
+class Department {
+ name: string = 'Department Default Name';
+ id: number;
+
+ constructor(){
+   this.name = n;
+ }
+
+ describe(this: Department){
+     console.log("Department: ", this.name);
+ }
+}
+
+
+const accounting = new Department('Accounting');
+accounting.describe() // Accounting
+
+const accCopy = {describe: accounting.describe}; // pointer to the function
+
+accCopy.describe(); // undefined
+```
+
+In the above function, we are passing **this** to the function but the function can still be called without any parameters and along with **this** we mention the type of class this should refer to, So in this case, Department.
+
+So with that, TypeScript will make sure that whenever we work with this keyword it should refer to the object with all same fields as **Department class**.
+
+---
+
+#### Private and Public Access Modifiers
+
+Values of members of any object can be 
+```javascript
+class Department {
+ name: string = 'Department Default Name';
+ employees: string[] = [];
+
+ constructor(){
+   this.name = n;
+ }
+
+ addEmployee(n: string){
+     this.employees.push(n);
+ }
+}
+
+const department = new Department('Adarsh');
+department[1] = 'Max'; // Direct access shouldn't be allowed as data isn't validated/sanitized.
+
+```
+
+Direct access to class members shouldn't be allowed as data isn't validated/sanitized.
+
+We can mark properties and methods private by 
+
+```javascript
+class Department {
+ name: string = 'Department Default Name';
+ private employees: string[] = []; // Field Private Now
+
+ constructor(){
+   this.name = n;
+ }
+
+ addEmployee(n: string){
+     this.employees.push(n);
+ }
+}
+
+const department = new Department('Adarsh');
+department[1] = 'Max'; // Direct access shouldn't be allowed as data isn't validated/sanitized.
+
+```
+
+**Private fields can only be modified and accessed by the class methods only.**
+
+**Short Hand Initialization**
+
+Instead of declaring the members in the class body and again in the constructor, we can simply declare them in the constructor parameter like:
+
+```javascript
+class Department{
+    constructor(private name: String, public departmentId: number){
+        // name and departmentId property created on this class.
+
+    }
+}
+```
+
+So, for every parameter of constructor function which starts with access modifier, property of the same name is created for the class.
+
+
+**(TS Only) Read-Only Property**
+
+Along with Private and Public properties, there can be readonly properties which once initialized with the object, cannot be changed.
+
+```javascript
+class Department{
+    private readonly name: string,
+    public readonly departmentId: number
+    
+    // OR IN THE CONSTRUCTOR
+    constructor(private readonly variableName: type){
+        
+    }
+}
+```
+
+In JavaScript, there are 3 kind of access modifiers:
+
+**public:** when you want to access the members everywhere in your application.  
+**private:** when you want to access the members only inside the class.  
+**protected:** when you want to access the members inside the class and its subclasses.
+
+---
+
+### Getter and Setter
+We can create getters and setters to access private/protected members outside the class through these functions.
+
+These functions are declared with the following syntax:
+
+```javascript
+class SomeClass {
+get anyNameRelatedToProperty(){
+    // return the value publicly
+
+    if(this.property){
+        return this.property
+    }
+
+    throw new Error("Property Not found");
+}
+
+set SomePropertyName(value: String){
+    this.addReport(value);
+}
+
+addReport(value){
+    this.property = value;
+}
+
+}
+
+const obj = new SomeClass();
+obj.anyNameRelatedToProperty // Don't execute ()
+obj.SomePropertyName = "NEW VALUE"; // Still don't execute ()
+```
+
+These methods are accessed like normal members and not executed with () like a method.
+
+
+### Abstract Classes 
+
+An abstract class is mostly used to provide a base for subclasses to extend and implement the abstract methods and override or use the implemented methods in abstract class.
+
+We use `abstract` keyword to declare such classes, methods or member variables.
+
+```javascript
+abstract class Department {
+    abstract Employees: string[] = [];
+    static fiscalYear = 2023;
+
+    constructor(){}
+
+    abstract printDepartment(this: Department): void
+}
+
+class ITDept extends Department {
+    // Implement all the abstract methods or variables here
+}
+```
+
+---
+
+### Singleton Private Constructor 
+Singleton means that we can only have one Instance of the class. To Enforce this we make use of private constructor.
+
+We achieve this by making the constructor private so it can't be called with new keyword and making a static method and static Instance variable on the class to check if a Instance is present return it if not create one and return it.
+
+```javascript
+
+class NewITDepartment {
+    private static myInstance: NewITDepartment;
+
+    private constructor(id: string){
+        this.id = id;
+    }
+
+    static getInstance(){
+        // this.myInstance === NewITDepartment.myInstance
+        if(this.myInstance){
+            return this.myInstance;
+        }
+        this.myInstance = new NewITDepartment('d2');
+        return this.myInstance
+    }
+}
+
+const IT = NewITDepartment.getInstance(); // Singleton
+```
+
+## (TS Only) Interfaces 
+
+We can use Interface to describe the structure of an object or function, we create intefaces with `interface` keyword. It is used for typechecking objects.
+
+```javascript
+interface Person{
+    name: string;
+    age: number;
+
+    // method(arguement: type): returnType
+    greet(phrase: string): void; 
+}
+
+let user1: Person;
+
+user1 = { // must have same fields as Person
+ name: 'Adarsh',
+ age: 24,
+ greet(phrase: string) {
+     console.log(phrase, this.name);
+ }
+}; 
+    
+```
+
+Similar thing can be achived with `type` like
+
+```javascript
+type Person = {
+    name: string;
+    age: number;
+
+    // method(arguement: type): returnType
+    greet(phrase: string): void; 
+}
+```
+
+So, why we have interface then?
+
+They are not exactly the same, there are some differences 
+
+1. Interface can only be used to describe structure of object.
+2.  An Interface can be implement in a class 
+
+```javascript
+interface Greetable {
+    name: string;
+    // Readonly possible in Interfaces
+    readonly id: number; 
+    // Optional: Add ? after the variablename
+    outputName?: string;
+    greet(phrase: string): void;
+}
+
+// Interface can be extended using extend keyword, interface i2 extends i1
+// Multiple interfaces can also be implemented. class name implements i1,i2
+class Person implements Greetable {
+    // Must implement all fields of Greetable
+    name: string;
+    id: number;
+    constructor(n: string, id: num){
+        this.name = n;
+        this.id = num
+    }
+
+    greet(phrase: string){
+        console.log(phrase, this.name);
+    }
+}
+```
+
+So Interfaces can be shared among files so all classes share the same structure.
+
+It's similar to abstract classes but it has no implementation details at all where in abstract classes we have can have implementation details. (Function overriding etc)
+
+```javascript
+let user1: Greetable;
+user1 = new Person("Adarsh"); // Possible bcuz Person Implements Greetable
+```
+
+Interface for function structure 
+```javascript
+interface AddFn {
+    // Function without name
+    (a: number,b: number): number;
+}
+
+let add: AddFn;
+add = (a: number,b: number) => {} // do something
+```
+
+**Add ? after property name to make it optional in interfaces or classes**
+
+```javascript
+class Person{
+    //Optional
+    name?: string;
+    constructor(n?: string){
+        if(n){
+        this.name = n;
+        }
+    }
+}
+
+const person = new Person(); // No parameter cuz optional
+```
