@@ -874,3 +874,146 @@ class Person{
 
 const person = new Person(); // No parameter cuz optional
 ```
+---
+
+# Advance Types
+
+### Intersection Type
+
+Intersection types allow us to combine other types.Use `&` to combine types.
+```javascript
+
+type Admin = {
+    name: string,
+    privileges: string[];
+}
+
+type Employee = {
+    name: string;
+    startDate: Date;
+};
+
+type ElevatedEmployee = Admin & Employee; 
+```
+
+ElevatedEmployee is a new type that must have both properties of Admin and Employee.
+
+```javascript
+const e1: ElevatedEmployee = {
+    name: 'Max',
+    privileges: ['create-server'],
+    startDate: new Date()
+}
+```
+
+Same thing we could have achived with interfaces by:
+
+1. Create Interface of Admin and Employee 
+2. Implement both Interfaces for ElevatedEmployee OR we can create a 3rd interface which extends Admin,Employee and use that Instead.  
+
+For Objects, Intersection will have all common fields and for Union types, the common type is used.
+
+For Example:
+```javascript
+type Combinable = string | number; // String OR Number Union
+type Numeric = number | boolean; // Number OR BOOL Union
+
+type Universal = Combinable & Numeric; // number; cuz it's common.
+
+```
+
+--- 
+
+### Discriminated Union Type 
+
+It's a special kind of TypeGuard which helps us Implementing TypeGuards Easier.
+
+We know these two typeguards 
+
+1. Typeof Operator
+2. Instance of Operator (Does not work with Interface)
+3. Using *if (prop in obj)* check, to check if a property exists on object before accessing it.
+
+We can set a custom property for each type and set it's value to a string literal so we can do actions based on the type property. 
+
+```javascript
+interface Bird {
+    type: 'bird'; // literal type, exact value as type
+    flyingSpeed: number; 
+}
+
+interface Horse {
+    type: 'horse'; // literal type, exact value as type
+    flyingSpeed: number; 
+}
+
+type Animal = Bird | Horse;
+
+function moveAnimal(animal: Animal){
+    switch(animal.type) {
+        // animal.type is a string literal type.
+    }
+}
+```
+---
+
+### Typecasting
+
+Typecasting tells typescript is some value of something specific type where typescript is not able to infer it on it's own.
+
+**For example:** Getting an element from DOM by the tagName, TypeScript is able to tell which element it is but when Element is selected by className or ID, TypeScript is atleast able to infer it as HTMLElement or NULL.
+
+It does not which specific Element it is, so most of the fields would work fine but some elements like input, accessing input field can make typescript go crazy.
+
+```javascript
+const input = document.querySelector('#id')! as HTMLInputElement;
+// OR
+const input = <HTMLInputElement> document.querySelector('#id')!;
+
+```
+
+---
+
+### Index Properties 
+
+Index Properties allows us to create flexible objects where we aren't sure about how many or which properties we will have but we know their value type.
+
+**Syntax:** Use square brackets to create the property name and it's type which can be of type String, Number or Symbol. Values such as boolean are not allowed and then colon : and the Type of value that the key will store.
+
+```javascript
+interface ErrorContainer {
+ [key: valueTypeStringNumberSymbol]: string;
+}
+// ErrorBag can be a empty object as well.
+const errorBag: ErrorContainer = { 
+    email: "Must be a valid email."
+}
+```
+
+**Restriction:** While creating a index property, all the properties (if there are any other than index type) must share the same valueType. 
+
+Object containing string and numbers are not allowed if index properties are present.
+
+Object of type containning Index properties can be a empty object and later we can add more properties.
+
+---
+
+### Function Overload
+
+Function overload is written just above the the original function with the same name 
+
+```javascript
+type Combinable = string | number;
+
+function add(a:number, b: number) : number; // Number, Number returns Number
+function add(a:string, b: string) : string; // string,string returns string
+function add(a: Combinable, b: Combinable) {
+    // logic of adding based on type here
+    return a+b;
+}
+
+const result1 = add(2,4); // number
+const result2 = add('Max', 2) // string
+```
+
+
