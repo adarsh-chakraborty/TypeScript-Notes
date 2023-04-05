@@ -1015,5 +1015,309 @@ function add(a: Combinable, b: Combinable) {
 const result1 = add(2,4); // number
 const result2 = add('Max', 2) // string
 ```
+---
+## Generics
+A Generic type is a type which is kind of connected to a other type and is flexable about what that other type is.
+
+For example, an Object is a type of it's own but it can contain strings and numbers. Array is a type and can store strings, numbers or objects.
+
+Generic in the similar way, Is a type which knows what other kind of data it will work with.
+
+We use **<>** brackets to define type we will evantually end up with.
+
+```javascript
+const names: string[]; 
+// the above line can also be written as
+const names2: Array<string> []; 
+```
+
+Here, we said names is an array which will contain strings. So for any data that gets stored in that array of string, we are sure that we can always apply string methods on it's elements.
+
+OR, If the Generic type is a Promise and we tell it in advance what kind of data it will evantually yield to, we can access it's respective properties and methods.
+
+Here, are some basic Generic examples -
+Array<string>
+Promise <Unknown>
+Promise <string>
+
+
+```typescript
+const promise: Promise<number> = new Promise((resolve, reject) => {
+    resolve(24);
+});
+
+promise.then(data => {
+ // data is a string 
+ data.split(' '); // ERROR CUZ data is a number
+});
+```
+
+#### Function Generics 
+
+Let's say we have a function that merges two objects.
+
+```typescript
+function merge(a: object, b: object){
+    return {...a,...b};
+}
+
+const merged = merge({name: 'Adarsh'},{age: 24});
+merged.name; // TypeScript does not know about these properties
+merged.age; // No support 
+```
+
+Here,TypeScript knows merge function will receive an object but it does not know the properties it'll contain hence when we try to access the properties on the returned result (merged) object, we get no typescript support.
+
+This is because, object itself is kind of very basic information.
+
+We can turn the same function into a Generic function by: 
+
+```typescript
+function merge<T,U>(a: T, b: U){
+    return {...a,...b};
+}
+
+const merged = merge({name: 'Adarsh'},{age: 24});
+merged.name; // TypeScript knows these properties
+merged.age; // Full TypeScript support 
+
+// We can also set type on a function call 
+// But it's redundant because typescript infers it  based on the data anyway.
+const result2 = merge<{name: string}>({name: 'Adarsh'}); // Generic on function call (REDUNDANT)
+```
+*Here, T and U are Identifiers and can be anything but single characters from T is a good naming convention.*
+
+Here, we're telling TypeScript that merge function we set two Identifiers, **T** and **U** and in the function parameters we mentioned these identifiers as type for the function parameters.
+
+We are working with two different object hence we used two identifiers.
+
+If no return type is mentioned it will infer the return type based on the data returned as usual.
+
+---
+
+In short, we pass extra information to function so we can work better with the result even tho we don't know much about the data before-hand, that's one explaination of Generics.
+
+**Constraints:**
+With the following code we were able to merge two objects but we're basically saying merge whatever we get in the function because in some way the Type of T and U is set to any.
+
+For Generic types we can set certain constraints regarding the Generic type is based on, we do this using the extends keyword.
+
+```typescript
+function merge<T extends object,U extends object>(a: T, b: U){
+    return {...a,...b};
+}
+
+const merged = merge({name: 'Adarsh'},{age: 24});
+merged.name; 
+merged.age;  
+```
+
+With that change, we're saying that the type T and U has to be an object and nothing else.
+
+We can extend any type whether it's string, number, union or even our own custom type.
+
+```typescript
+// String and array both have length property.
+interface Lengthy {
+    length: number;
+}
+function countAndDescribe<T extends length>(element: T) : [T, string]{
+
+    // return type is tuple bcuz exactly two elements of specific type
+    let descriptionText = 'Got no value';
+    if(element.length > 0){
+        descriptionText = `Got ${element.length} elements`;
+    }
+    return [element, descriptionText];
+}
+
+countAndDescribe("Hello"); // length property exists
+countAndDescribe(['cooking', 'coding']); // length property exists
+countAndDescribe(30); // Error no length property exists
+```
+In the above function, we don't care about the exact type, we only care about the fact that it has a length property, even if it's an array (behind the scenes array is just another object in javascript).
+
+The Idea is to not being specific about type of data we will get, we just care it does have the property we're going to work with whether it's string or an array. We don't want to lock the type to a single type.
+
+So it Instead of writing bunch of overloads or union types, generics are used.
+
+---
+
+### keyof constraint
+
+Consider the following function:
+
+```typescript
+function getValue(obj: object, key: string){
+    return obj[key];
+}
+
+getValue({}, 'name');
+```
+
+In the above function, we're trying to extract value from an object based the key that we passed to the function.
+
+But, TypeScript does not gurantee that the key is present on the object hence it throws error.
+
+To fix this, we can use another constraint known as **keyof**.
+
+```typescript
+function getValue<T extends object,U extends keyof T>(obj: T, key: U){
+    return obj[key]; // No Error
+}
+
+getValue({}, 'name'); // Error name does not exists
+getValue({name: 'Adarsh'}, 'name'); // Adarsh; OK
+```
+
+Now, the TypeScript can check if the key is present on the object and throw error otherwise.
+
+---
+
+### Generic Classes 
+
+let's consider a class for data storage.
+
+```typescript
+class DataStorage {
+    private data = [];
+
+    addItem(item){
+        this.data.push(item);
+    }
+
+    removeItem(item){
+        this.data.splice(this.data.indexOf(item), 1);
+    }
+
+    getItems(){
+        return [...this.data];
+    }
+}
+```
+
+the above class throws error about data being of type any.
+
+but, we don't really care about the type of data we're gonna store whether it's number, string or anything else, for that we can turn this function into a generic function
+
+
+```typescript
+class DataStorage<T extends string | number | boolean> {
+    private data: T[] = [];
+
+    addItem(item: T){
+        this.data.push(item);
+    }
+
+    removeItem(item: T){
+        if(this.data.indexOf(item) === -1){
+            // -1 == Not found, and -1 remove last object in splice
+            return;
+        }
+        this.data.splice(this.data.indexOf(item), 1);
+    }
+
+    getItems(){ 
+        // infered return type as T
+        return [...this.data];
+    }
+}
+
+const textStorage = new DataStorage<string>();
+textStorage.addItem(19); // Error 
+textStorage.addItem('Adarsh'); // OK
+textStorage.getItems(); // OK
+
+const numberStorage = new DataStorage<number>();
+numberStorage.addItem('Adarsh'); // Error
+numberStorage.addItem(23); // OK
+
+const combinedStorage = new DataStorage<number | string>();
+combinedStorage.addItem('Adarsh'); // OK
+combinedStorage.addItem(23); // OK
+```
+
+So now by using Generic, we giving extra information about the data being stored but still being flexible about it and get full support of TypeScript.
+
+The above code only work with primitive types hence setting constraints is a good idea.
+
+--- 
+
+### Generic Utility Types 
+
+TypeScript ships with some builtin Utility types that helps and only exists in the development phase before compilation.
+
+```typescript
+interface CourseGoal {
+    title: string;
+    description: string;
+    completeUntil: Date;
+}
+
+function createCourseGoal(title: string, description: string, date: Date): CourseGoal{
+    // Now returning like this is fine
+    return {
+     title: title,
+     description: description,
+     completeUntil: date
+    }
+
+}
+```
+
+Returning an object with all the mandatory field works but what if for some reason we don't have all the fields, like for example fetching from API or doing validation of data for each field.
+
+then the code would look like something like this
+
+```typescript
+function createCourseGoal(title: string, description: string, date: Date): CourseGoal{
+    // Now returning like this is fine
+    let courseGoal = {};
+    // the below lines throws error because property does not exists on the object
+    courseGoal.title = title; // Error 
+    courseGoal.description = description; // Error
+    courseGoal.completeUntil = date; // Error
+    
+    return courseGoal;
+}
+```
+
+We see error, because TypeScript does not like modifying an unknown properties of object, so if we set type of object to `CourseGoal` then 
+```javascript
+  let courseGoal: CourseGoal = {}; // Error
+```
+
+because courseGoal is of type CourseGoal and cannot be an empty object. 
+
+So to overcome this, we can some a Generic Utility called **Partial**.
+
+```typescript
+function createCourseGoal(title: string, description: string, date: Date): CourseGoal{
+    // Now returning like this is fine
+    let courseGoal: Partial<CourseGoal> = {};
+    // the below lines throws error because property does not exists on the object
+    courseGoal.title = title; // Error 
+    courseGoal.description = description; // Error
+    courseGoal.completeUntil = date; // Error
+    
+    return courseGoal as CourseGoal; // bcuz returnType Partial != CourseCoal
+}
+```
+
+So by using Generic type, we are telling TypeScript that courseGoal will evantually hold a CourseGoal.
+
+#### Readonly Utility Type 
+Readonly type as the name suggests marks the type as readonly and any attempt to modify or delete it will result in an error. It works for objects as well.
+
+For Example:
+```typescript
+const names: Readonly<string[]> = ['Adarsh', 'Max'];
+names.push('OK'); // Error
+names.pop(); // Error
+
+```
+---
+
+
 
 
