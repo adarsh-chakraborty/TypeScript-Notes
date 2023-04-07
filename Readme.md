@@ -1317,7 +1317,233 @@ names.pop(); // Error
 
 ```
 ---
+## Decorators
+
+A Decorator is a special kind of declaration that can be attached to a class declaration, method, accessor, property, or parameter. Decorators use the form @expression, where expression must evaluate to a function that will be called at runtime with information about the decorated declaration.
+
+For example, given the decorator @sealed we might write the sealed function as follows:
+
+```javascript
+function sealed(target) {
+  // do something with 'target' ...
+}
+```
+
+### First Class Decorator 
+
+Decorator is in the end is just a function that we apply to something like a class in certain way.
+
+**Decorator function name starts with capital letter, just naming convention. Not necessary**
+```javascript
+function Logger(target: Function){
+    // target is the constructor function
+    console.log(target);
+}
+
+@Logger // Don't execute, just point to function
+class Person {
+    name = 'Max';
+
+    constructor(){
+        console.log("Creating person Object");
+    }
+}
+
+const person = new Person();
+}
+```
+
+Here, **@Logger** just points to the decorator function, we don't execute it using ().
+
+**Note:** Decorator function always executes first which means It is executed **when the class is defined not instantiated**. We don't really need to instantiate the class at all.
+
+So basically, decorator runs when javascript finds the class *(class constructor)* definition, not when we use the class constructor to create a object.
+
+### Decorator Factory
+
+A Decorator Factory is simply a function that returns the expression that will be called by the decorator at runtime. 
+
+Decorators are simply functions that are prefixed @expression symbol, where expression must evaluate to a function that will be called at runtime with information about the decorated declaration.
+
+In other words, Decorator Factory returns a decorator function but allows us to configure it when we assign it as a decorator to something.
 
 
+```javascript
+function Logger(logString: string){
+    return function(target: Function){
+        console.log(logString,"Logging");
+        console.log(target);
+    }
+}
+
+@Logger("SOME TEXT") // This time we execute
+class Person {
+    name = 'max';
+
+    constructor(){
+        console.log("Creating an object of Person");
+    }
+}
+```
+
+2 Changes: 
+1. Logger now returns a function
+2. While using @expression, this time we execute it using **()** instead of just pointing to the function. 
+3. We can pass extra information to the decorator function to change it's beheavior.
+
+```javascript
+@Logger("Some Information")
+```
+
+**Another Example of Decorator**
+
+```javascript
+// Passed extra information html, Id from DOM
+function WithTemplate(html, hookID){
+    return function (target: any){
+        // target is the constructor function
+
+        const element = document.getElementById(hookID);
+        if(element){
+            element.innerHTML = html;
+            // We can also get the object created using the constructor
+            const p = new target(); // Person constructor
+            document.querySelector('h1')!.textContent = p.name; // person name
+        }
+
+    }
+}
+
+
+// HTML TEMPLATE, HookID from DOM
+@WithTemplate('<h2>My Profile</h2>', 'app'); 
+class Person(){
+    name = 'Max';
+    constructor(){
+        console.log('Person object created');
+    }
+}
+```
+
+***Multiple Decorators:**
+
+We can apply multiple Decorators to anywhere wherever Decorators can be applied.
+
+```javascript
+@Logger()
+@WithTemplate()
+class Person{}
+```
+
+Order of Execution: Decorator Factory are executed in the order as they're defined but the actual decorator is executed from the bottom-up approach.
+
+In this case, WithTemplate decorator executes first then the Logger decorator and so on. Bottom-Up appraoch.
+
+
+**Adding Decorators to other places**
+
+Let's consider this class -
+
+```javascript
+class Product {
+    title: string,
+    private _price: number;
+
+    set price(val: number){
+        if(price > 0){
+            this._price = val;
+        }else {
+            throw new Error("Price cannot be negative");
+        }
+    }
+
+    constructor(t: string, p: number){
+        this.title = t;
+        this._price = p;
+    }
+
+    getPriceWithTax(tax: number){
+        return this._price * (1+tax);
+    }
+}
+```
+
+We can add decorators to the above classes:
+
+
+```typescript
+// PROPERTY DECORATOR
+// target is prototype of Instance
+// propertyName is name of property to which the decorator applied.
+function Log(target: any, propertyName: string | Symbol){
+    console.log('Property Decorator');
+    console.log(target, propertyName);
+
+}
+
+// Accessor Decorator (GET, SET Methods) 
+// This one receives 3 arguements!!
+// target: Prototype if instance, constructor if static
+// propertyName: Name of the property it's applied to
+// descriptor: 
+function Log2(target: any, propertyName: string, descriptor: PropertyDescriptor){
+
+    console.log('Accessor Decorator');
+    console.log(target);
+    console.log(propertyName);
+    console.log(descriptor);
+
+}
+
+// Method Decorator
+// target: prototype if instance, constructor if static
+// Method or Property Name: Name of property it's applied to
+// Descriptor: PropertyDescriptor
+function Log3(target: any,methodName: string | Symbol, descriptor: PropertyDescriptor){
+
+    console.log('Method Decorator');
+    console.log(target);
+    console.log(methodName);
+    console.log(descriptor);
+
+}
+
+// Parameter Decorator
+// target: prototype if instance, constructor if static
+// methodName: Not name of parameter but the name of the method in which parameter is used.
+// position: Position of the parameter in the function call. First is 0 and so on.
+function Log4(target: any, methodName: string | Symbol, position: number){
+     console.log('Parameter Decorator');
+    console.log(target);
+    console.log(methodName);
+    console.log(descriptor);
+}
+
+class Product {
+    @Log // 2 arguements (prototype, propertyName)
+    title: string,
+    private _price: number;
+
+    @Log2 // passed 3 arguements
+    set price(val: number){
+        if(price > 0){
+            this._price = val;
+        }else {
+            throw new Error("Price cannot be negative");
+        }
+    }
+
+    constructor(t: string, p: number){
+        this.title = t;
+        this._price = p;
+    }
+
+    @Log3
+    getPriceWithTax(@Log4 tax: number){
+        return this._price * (1+tax);
+    }
+}
+```
+If decorator is applied to a property of class, the target refers to the prototype of object where methods are registered and not members. If the property is static, the target refers to the constructor function.
 
 
