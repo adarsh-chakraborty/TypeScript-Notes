@@ -1546,4 +1546,42 @@ class Product {
 ```
 If decorator is applied to a property of class, the target refers to the prototype of object where methods are registered and not members. If the property is static, the target refers to the constructor function.
 
+**Returning and making changes using decorators:**
 
+We can return a new class using decorators to modify the orginal constructor using decorators. We can return a new class in the original decorator function.
+
+
+```javascript
+function WithTemplate(template: string, hookID: string){
+    console.log("Decorator Factory");
+
+    // returns a decorator function 
+    // of type T, extends an object with new property
+    // returns a type Object which will have a name property
+    return function<T extends {new(...args: any[]): {name: string}}>(originalConstructor: T){
+
+        // returning a class which extends the target (origianal constructor)
+        return class extends originalConstructor {
+            // any arguements
+            constructor(..._: any[]){
+                // _ represents not using that parameter.
+                super();
+                console.log("RENDERING TEMPLATE");
+                // find element by hookId
+                // access constructor properties using this keyword.
+                console.log(this.name);
+            }
+        }
+    }
+}
+```
+
+Now by this changes, the actual changes on the DOM will not take effect on class definition but when the object from the class is created. (Instantiated)
+
+```javascript
+// Class which will have old properties but will have the new methods and logic as well.
+
+// Changes will take effect on class instantiation, instead of class definition.
+const p = new Person();
+console.log(pers);
+```
