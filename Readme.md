@@ -1585,3 +1585,155 @@ Now by this changes, the actual changes on the DOM will not take effect on class
 const p = new Person();
 console.log(pers);
 ```
+**Other Decorator Return Types -**
+
+Decorator that can return something are the Decorator that used in Accessors (Getter, Setter) and Methods.
+
+The Decorators on properties and parameters can also return something but TypeScript will ignore it. So return values are not used there.
+
+
+We can return a brand new PropertyDescriptor.
+
+```javascript
+// return type ( ) :  PropertyDescriptor
+function Log2(target:any, name: string, descriptor: PropertyDescriptor){
+    console.log('Accessor Descriptor');
+    console.log(target);
+    console.log(name);
+    console.log(descriptor);
+    // return {enumerable: true } // possible
+}
+```
+Here we can return a brand new PropertyDescriptor descriptor. Now to return something in method Decorator -
+
+Let's take an example of
+```javascript
+class Printer {
+    message = 'this works!';
+
+    showMessage(){
+        console.log(this.message);
+    }
+}
+
+const p = new Printer();
+document.querySelector('button')!.addEventListener('click', p.showMessage); // this refers to wrong context
+```
+
+Here When p.showMessage is used like this and when the button is clicked, p.showMessage, the *this* will not refer to Printer or p, Instead it will refer to something else.
+
+We can use bind method to pass the this context to it by, **p.showMessage.bind(p)**.
+
+But to fix this by using Decorators, To make *this* always refer to correct context, no matter how and where it's called.. 
+
+```javascript
+// target: prototype or constructor if static
+// method or property name (depends where it's used)
+// PropertyDescriptor
+function AutoBind(_: any, _: string, descriptor: PropertyDescriptor){
+    // To get access method which should be called
+    // It's located in value property of descriptor which points to the function.
+    const originalMethod = descriptor.value;
+    const adjustedDescriptor: PropertyDescriptor = {
+        configurable: true,
+        enumerable: false,
+        get() {
+            // get() because we want to do some extra logic
+            // and not just directly access the method and doing so we don't set .value property
+            // get is basically having a .value property but with extra logic
+
+// always refer to the object because get()
+            const boundFn = originalMethod.bind(this);
+            return boundFn;
+        }
+        return adjustedDescriptor;
+    }
+}
+class Printer {
+    message = 'this works!';
+
+    @AutoBind
+    showMessage(){
+        console.log(this.message);
+    }
+}
+
+const p = new Printer();
+document.querySelector('button')!.addEventListener('click', p.showMessage); // this refers to wrong context
+```
+
+**Validation with Decorators -**
+
+```javascript
+interface ValidatorConfig {
+    [property: string]: {
+        [validatableProp: string]: string[] // ['required', 'positive'];
+    }
+}
+
+const registeredValidators: ValidatorConfig = {};
+
+function Required(target: any, propName: string){
+    // key is class Name
+    registeredValidators[target.constructor.name] = {
+        ...registeredValidators[target.constructor.name],
+         [propName]: [...(registeredValidators[target.constructor.name]?.[propName] ?? []), 'required']
+    }
+}
+
+function PositiveNumber(target: any, propName: string){
+    registeredValidators[target.constructor.name] = {
+        ...registeredValidators[target.constructor.name],
+        [propName]: [...(registeredValidators[target.constructor.name]?.[propName] ?? []), 'positive']
+    }
+}
+
+function validate(obj: any){
+    // go through all registered validators
+
+    const objValidatorConfig = registeredValidators[obj.constructor.name];
+    if(!objValidatorConfig) return true;
+    let isValid = true;
+    for(const prop in objValidatorConfig){
+        for(const validator of objValidatorConfig){
+            switch(validator) {
+                case 'required': 
+                isValid = isValid && !!obj[prop];
+                break;
+                case 'positive':
+                isValid = isValid && obj[prop] > 0;
+                break;
+            }
+        }
+    }
+    return isValid; 
+}
+
+class Course {
+    @Required
+    title: string;
+    @PositiveNumber
+    price: number;
+
+    constructor(t: string, p: number){
+        this.title = t;
+        this.price = p;
+    }
+}
+
+const courseForm = document.querySelector('form')!;
+courseForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const titleEl = document.getElementById('title') as HTMLInputElement;
+    const priceEl = document.getElementById('price') as HTMLInputElement;
+
+    const title = titleEl.value;
+    const price = +priceEl.value; // convert to number
+
+    const createdCourse = new Course(title, price);
+    if(!validate(createdCourse)){
+        alert("Invalid Input");
+        return;
+    }
+});
+```
